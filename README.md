@@ -2,12 +2,12 @@
 
 基于 TV 5.5.6 和公开的定制 Media3 构建，增加内置点播/直播源管理。此分支对应已发布的兼容版 APK。
 
-- [下载 APK 与播放器依赖包](https://github.com/AllenHowl/TV/releases/tag/v5.5.6-sources-compat.2)
+- [下载 APK 与播放器依赖包](https://github.com/AllenHowl/TV/releases/tag/v5.5.6-sources-compat.3)
 - [构建及验证说明](BUILDING.md)
 
-提供电视版和手机版 ARM32 / ARM64 Debug APK，最低 Android 7.0（API 24），包名 `com.fongmi.android.tv.sources`，版本 `5.5.6-sources-compat.2`。两种界面使用同一个包名，按设备选择其中一个；可与原版 `com.fongmi.android.tv` 并存。数据独立保存，不自动迁移原版数据。
+提供电视版和手机版 ARM32 / ARM64 Debug APK，最低 Android 7.0（API 24），包名 `com.fongmi.android.tv.sources`，版本 `5.5.6-sources-compat.3`。两种界面使用同一个包名，按设备选择其中一个；可与原版 `com.fongmi.android.tv` 并存。数据独立保存，不自动迁移原版数据。
 
-此版本修复源列表高度为 0 和底部按钮被裁切的问题，短屏和大字号下顶部控件可滚动；沿用初版签名，版本代码升至 557，可覆盖安装。
+本次仅修复遥控器进入线路/详情和返回路径，查看详情后保留选中的线路，源目录与上一版相同；沿用初版签名，版本代码升至 558，可覆盖安装。
 
 内置 56 条点播配置记录和 2 个直播原始地址。支持推荐源、完整目录、搜索、自定义添加、线路选择、首次选源和稍后选择；点播与直播分别记忆，可显式跟随点播配置；保留失败恢复和连续切换保护。
 

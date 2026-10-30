@@ -1,17 +1,17 @@
 {
-  "built_at": "2026-10-30T23:05:33+08:00",
+  "built_at": "2026-10-31T00:51:54+08:00",
   "tv_baseline": "4573249cd6679c6becca9957f6a011bf6c4a5afd",
   "media_commit": "3c2cbe8ac742c2fe15eff52f03eeb3b1b648848d",
   "artifacts": [
     {
       "file": "TV-Sources-tv-arm64-debug.apk",
       "bytes": 107503553,
-      "sha256": "89f59121cf5330e32cc784262aaf7594d06777691dd5a6cd974679989ed1b0c7",
+      "sha256": "9bb9b24d1ffc2a0cd1d665dfaa99e9694fc2cdc4f219a22a6fdc383791144a08",
       "signature": "APK Signature Scheme v2 verified",
       "certificate_sha256": "e5252bc56c1468dd69613917f9f271d2929f5c4f4905a82c491ac1a7b55db52a",
       "package": "com.fongmi.android.tv.sources",
-      "version": "5.5.6-sources-compat.2",
-      "version_code": 557,
+      "version": "5.5.6-sources-compat.3",
+      "version_code": 558,
       "min_sdk": 24,
       "abi": "arm64-v8a",
       "vod_entries": 56,
@@ -51,12 +51,12 @@
     {
       "file": "TV-Sources-tv-arm32-debug.apk",
       "bytes": 94494951,
-      "sha256": "4006014802986334afc79190dc04cde17e2c5634b4623facc54633f055af4f5b",
+      "sha256": "8a530a50523499a9ff94580b0fcad8d8f95b8be8d5d632c167260125faa321fc",
       "signature": "APK Signature Scheme v2 verified",
       "certificate_sha256": "e5252bc56c1468dd69613917f9f271d2929f5c4f4905a82c491ac1a7b55db52a",
       "package": "com.fongmi.android.tv.sources",
-      "version": "5.5.6-sources-compat.2",
-      "version_code": 557,
+      "version": "5.5.6-sources-compat.3",
+      "version_code": 558,
       "min_sdk": 24,
       "abi": "armeabi-v7a",
       "vod_entries": 56,
@@ -99,12 +99,12 @@
     {
       "file": "TV-Sources-mobile-arm64-debug.apk",
       "bytes": 106909609,
-      "sha256": "f6d279b8b03eb05c9839458332dc8debfe8fc4e86c221682ae9153e609c27cc8",
+      "sha256": "5914dcb5d99cf719930b3b6fc5ea57081cdd0a0236e3d499635c322561e649e6",
       "signature": "APK Signature Scheme v2 verified",
       "certificate_sha256": "e5252bc56c1468dd69613917f9f271d2929f5c4f4905a82c491ac1a7b55db52a",
       "package": "com.fongmi.android.tv.sources",
-      "version": "5.5.6-sources-compat.2",
-      "version_code": 557,
+      "version": "5.5.6-sources-compat.3",
+      "version_code": 558,
       "min_sdk": 24,
       "abi": "arm64-v8a",
       "vod_entries": 56,
@@ -144,12 +144,12 @@
     {
       "file": "TV-Sources-mobile-arm32-debug.apk",
       "bytes": 93901007,
-      "sha256": "2d200a38c25f5c4463fe8c1975cdc585e937089ad937223081667a4897dc84df",
+      "sha256": "7fcba85ee678730e26678be85b916881191774d13b9c6cc7197985dcd8dfacf0",
       "signature": "APK Signature Scheme v2 verified",
       "certificate_sha256": "e5252bc56c1468dd69613917f9f271d2929f5c4f4905a82c491ac1a7b55db52a",
       "package": "com.fongmi.android.tv.sources",
-      "version": "5.5.6-sources-compat.2",
-      "version_code": 557,
+      "version": "5.5.6-sources-compat.3",
+      "version_code": 558,
       "min_sdk": 24,
       "abi": "armeabi-v7a",
       "vod_entries": 56,
@@ -193,7 +193,7 @@
   "gradle_tests": [
     {
       "name": "com.fongmi.android.tv.ui.dialog.SourceDialogLayoutTest",
-      "tests": "7",
+      "tests": "9",
       "failures": "0",
       "errors": "0",
       "skipped": "0",
@@ -217,7 +217,7 @@
     },
     {
       "name": "com.fongmi.android.tv.ui.dialog.SourceDialogLayoutTest",
-      "tests": "7",
+      "tests": "9",
       "failures": "0",
       "errors": "0",
       "skipped": "0",
@@ -242,10 +242,9 @@
   ],
   "device_validation": "Not run: no connected Android device; no KVM device available.",
   "repository": "https://github.com/AllenHowl/TV",
-  "tag": "v5.5.6-sources-compat.2",
+  "tag": "v5.5.6-sources-compat.3",
   "reproduction": "JAVA_HOME=<JDK21> TV_BUILD_PYTHON=<Python3.10> bash tools/build_release.sh",
-  "layout_regression": {
-    "before": "Actual Android source-list height was 0 with bundled entries present.",
-    "after": "7 real-dialog checks passed in each of the television and mobile variants: recommended rows/footer/focus, full catalog/last-row scrolling, live switch, short landscape, 720p, portrait, large text."
-  }
+  "scope": "Remote focus/line/details only; catalog byte-identical to release .2.",
+  "catalog_sha256": "8d95114067792ae34b0d747f24220b7e02bdad0a3dde722f7215c982e77749f8",
+  "remote_regression": "Both UI flavors pass key-event checks: right to options, center opens lines, down/center selects a line, right to details, left returns, details shows selected URL without discarding selection."
 }
