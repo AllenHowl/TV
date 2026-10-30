@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify, collect and document the two installable compatibility APKs."""
+"""Verify, collect and document the four installable compatibility APKs."""
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -37,8 +37,8 @@ def main():
         assert 'Verifies' in verification and 'v2): true' in verification
         badging = subprocess.check_output([str(build_tools / 'aapt2'),'dump','badging',str(source)], text=True)
         assert "name='com.fongmi.android.tv.sources'" in badging
-        assert "versionName='5.5.6-sources-compat.2'" in badging
-        assert "versionCode='557'" in badging
+        assert "versionName='5.5.6-sources-compat.3'" in badging
+        assert "versionCode='558'" in badging
         assert "minSdkVersion:'24'" in badging
         assert f"native-code: '{abi}'" in badging
         manifest = subprocess.check_output([str(build_tools / 'aapt2'),'dump','xmltree',str(source),'--file','AndroidManifest.xml'], text=True)
@@ -70,7 +70,7 @@ def main():
         shutil.copy2(source,target)
         (args.output / f'{label}-{arch}-signature.txt').write_text(verification)
         (args.output / f'{label}-{arch}-package.txt').write_text(badging)
-        results.append({'file':target.name,'bytes':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'signature':'APK Signature Scheme v2 verified','certificate_sha256':re.search(r'certificate SHA-256 digest: (.*)',verification).group(1),'package':'com.fongmi.android.tv.sources','version':'5.5.6-sources-compat.2','version_code':557,'min_sdk':24,'abi':abi,'vod_entries':vod_count,'live_entries':live_count,'native_libraries':len(libraries),'unresolved_native_dependencies':unresolved,'native_16k_alignment':all(value>=0x4000 for value in alignments.values()),'elf_alignments':alignments})
+        results.append({'file':target.name,'bytes':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'signature':'APK Signature Scheme v2 verified','certificate_sha256':re.search(r'certificate SHA-256 digest: (.*)',verification).group(1),'package':'com.fongmi.android.tv.sources','version':'5.5.6-sources-compat.3','version_code':558,'min_sdk':24,'abi':abi,'vod_entries':vod_count,'live_entries':live_count,'native_libraries':len(libraries),'unresolved_native_dependencies':unresolved,'native_16k_alignment':all(value>=0x4000 for value in alignments.values()),'elf_alignments':alignments})
     assert len({item['certificate_sha256'] for item in results}) == 1
     tests = []
     for variant in ['LeanbackArmeabi_v7a', 'MobileArmeabi_v7a']:
@@ -80,14 +80,14 @@ def main():
             item = {key: root.attrib.get(key) for key in ['name','tests','failures','errors','skipped']}
             item['variant'] = variant
             group.append(item)
-        assert sum(int(item['tests']) for item in group) == 18, (variant, group)
-        assert any(item['name'].endswith('SourceDialogLayoutTest') and int(item['tests']) == 7 for item in group)
+        assert sum(int(item['tests']) for item in group) == 20, (variant, group)
+        assert any(item['name'].endswith('SourceDialogLayoutTest') and int(item['tests']) == 9 for item in group)
         assert all(int(item['failures']) + int(item['errors']) + int(item['skipped']) == 0 for item in group)
         tests.extend(group)
-    info = {'built_at':datetime.now(ZoneInfo('Asia/Hong_Kong')).isoformat(timespec='seconds'),'tv_baseline':'4573249cd6679c6becca9957f6a011bf6c4a5afd','media_commit':'3c2cbe8ac742c2fe15eff52f03eeb3b1b648848d','artifacts':results,'gradle_tests':tests,'device_validation':'Not run: no connected Android device; no KVM device available.','repository':'https://github.com/AllenHowl/TV','tag':'v5.5.6-sources-compat.2','reproduction':'JAVA_HOME=<JDK21> bash tools/build_compat.sh'}
+    info = {'built_at':datetime.now(ZoneInfo('Asia/Hong_Kong')).isoformat(timespec='seconds'),'tv_baseline':'4573249cd6679c6becca9957f6a011bf6c4a5afd','media_commit':'3c2cbe8ac742c2fe15eff52f03eeb3b1b648848d','artifacts':results,'gradle_tests':tests,'device_validation':'Not run: no connected Android device; no KVM device available.','repository':'https://github.com/AllenHowl/TV','tag':'v5.5.6-sources-compat.3','reproduction':'JAVA_HOME=<JDK21> bash tools/build_compat.sh'}
     (args.output / 'build-info.json').write_text(json.dumps(info,ensure_ascii=False,indent=2)+'\n')
     (args.output / 'SHA256SUMS').write_text(''.join(item['sha256']+'  '+item['file']+'\n' for item in results))
-    print(json.dumps({'artifacts':[{key:item[key] for key in ['file','bytes','package','signature','native_16k_alignment']} for item in results],'gradle_test_executions':36},ensure_ascii=False,indent=2))
+    print(json.dumps({'artifacts':[{key:item[key] for key in ['file','bytes','package','signature','native_16k_alignment']} for item in results],'gradle_test_executions':40},ensure_ascii=False,indent=2))
 
 
 if __name__ == '__main__':

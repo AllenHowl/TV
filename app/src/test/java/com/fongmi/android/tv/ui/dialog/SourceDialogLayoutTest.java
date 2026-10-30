@@ -5,8 +5,12 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
+import android.view.KeyEvent;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.ListView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import com.fongmi.android.tv.App;
@@ -18,6 +22,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.shadows.ShadowDialog;
 import static org.junit.Assert.*;
 import static org.robolectric.Shadows.shadowOf;
 
@@ -143,4 +148,57 @@ public class SourceDialogLayoutTest {
         assertVisible(dialog);
         dialog.dismiss();
     }
+
+    private void key(Dialog dialog, int keyCode) {
+        dialog.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, keyCode));
+        dialog.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, keyCode));
+        shadowOf(Looper.getMainLooper()).idle();
+    }
+
+    @Test public void remoteCanEnterLineOptionsAndViewSelectedLineDetails() {
+        Dialog manager = open(0);
+        RecyclerView sources = assertVisible(manager);
+        View row = sources.getChildAt(0);
+        Button options = button(row, R.string.source_options);
+        assertTrue(row.requestFocus());
+        key(manager, KeyEvent.KEYCODE_DPAD_RIGHT);
+        assertTrue("Right key did not enter the line options button", options.hasFocus());
+        key(manager, KeyEvent.KEYCODE_DPAD_CENTER);
+        AlertDialog lines = (AlertDialog) ShadowDialog.getLatestDialog();
+        assertNotSame(manager, lines);
+        ListView choices = lines.getListView();
+        assertEquals(5, choices.getAdapter().getCount());
+        choices.requestFocus();
+        choices.setSelection(0);
+        key(lines, KeyEvent.KEYCODE_DPAD_DOWN);
+        key(lines, KeyEvent.KEYCODE_DPAD_CENTER);
+        assertEquals(1, choices.getCheckedItemPosition());
+        Button details = lines.getButton(AlertDialog.BUTTON_NEUTRAL);
+        key(lines, KeyEvent.KEYCODE_DPAD_RIGHT);
+        assertTrue("Line list cannot reach details with the remote", details.hasFocus());
+        key(lines, KeyEvent.KEYCODE_DPAD_LEFT);
+        assertTrue("Details cannot return to line selection", choices.hasFocus());
+        key(lines, KeyEvent.KEYCODE_DPAD_RIGHT);
+        key(lines, KeyEvent.KEYCODE_DPAD_CENTER);
+        AlertDialog detail = (AlertDialog) ShadowDialog.getLatestDialog();
+        assertNotSame(lines, detail);
+        TextView message = detail.findViewById(android.R.id.message);
+        assertTrue(message.getText().toString().contains("https://0.wudaozhe.net/tvbox/"));
+        detail.dismiss();
+        assertTrue("Viewing details discarded line selection", lines.isShowing());
+        assertEquals(1, choices.getCheckedItemPosition());
+        lines.dismiss();
+        manager.dismiss();
+    }
+
+    @Test public void remoteLeftReturnsFromOptionsToTheSameSourceRow() {
+        Dialog manager = open(0);
+        View row = assertVisible(manager).getChildAt(0);
+        Button options = button(row, R.string.source_options);
+        assertTrue(options.requestFocus());
+        key(manager, KeyEvent.KEYCODE_DPAD_LEFT);
+        assertTrue("Left key left the source row", row.isFocused());
+        manager.dismiss();
+    }
+
 }

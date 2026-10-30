@@ -8,11 +8,13 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.KeyEvent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -308,14 +310,25 @@ public class SourceDialog extends DialogFragment {
         String[] lines = entry.lines.stream().map(item -> item.name).toArray(String[]::new);
         int preferred = Math.max(0, Math.min(Prefers.getInt("source_line_" + entry.id), lines.length - 1));
         int[] choice = {preferred};
-        new MaterialAlertDialogBuilder(requireContext()).setTitle(entry.name)
+        AlertDialog picker = new MaterialAlertDialogBuilder(requireContext()).setTitle(entry.name)
                 .setSingleChoiceItems(lines, preferred, (dialog, which) -> choice[0] = which)
                 .setPositiveButton(R.string.source_use, (dialog, which) -> select(entry, choice[0]))
-                .setNeutralButton(R.string.source_details, (dialog, which) -> new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.source_details)
-                        .setMessage(getString(R.string.source_details_text, entry.name, entry.lines.get(choice[0]).url))
-                        .setPositiveButton(android.R.string.ok, null).show())
-                .setNegativeButton(R.string.source_close, null).show();
+                .setNeutralButton(R.string.source_details, null)
+                .setNegativeButton(R.string.source_close, null).create();
+        picker.setOnShowListener(ignored -> {
+            ListView choices = picker.getListView();
+            Button details = picker.getButton(AlertDialog.BUTTON_NEUTRAL);
+            choices.setOnKeyListener((view, keyCode, event) -> event.getAction() == KeyEvent.ACTION_DOWN
+                    && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && details.requestFocus());
+            details.setOnKeyListener((view, keyCode, event) -> event.getAction() == KeyEvent.ACTION_DOWN
+                    && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_UP) && choices.requestFocus());
+            details.setOnClickListener(view -> new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.source_details)
+                    .setMessage(getString(R.string.source_details_text, entry.name, entry.lines.get(choice[0]).url))
+                    .setPositiveButton(android.R.string.ok, null).show());
+            if (tv()) choices.requestFocus();
+        });
+        picker.show();
     }
 
     private void addCustom() {
@@ -349,6 +362,7 @@ public class SourceDialog extends DialogFragment {
         @Override
         public SourceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LinearLayout row = new LinearLayout(parent.getContext());
+            row.setId(View.generateViewId());
             row.setGravity(android.view.Gravity.CENTER_VERTICAL);
             row.setPadding(dp(8), dp(8), dp(8), dp(8));
             row.setMinimumHeight(dp(tv() ? 76 : 68));
@@ -361,6 +375,22 @@ public class SourceDialog extends DialogFragment {
             label.setTextSize(tv() ? 19 : 16);
             row.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
             Button options = button(R.string.source_options);
+            options.setId(View.generateViewId());
+            options.setFocusable(true);
+            row.setNextFocusLeftId(row.getId());
+            row.setNextFocusRightId(options.getId());
+            options.setNextFocusLeftId(row.getId());
+            options.setNextFocusRightId(options.getId());
+            row.setOnKeyListener((view, keyCode, event) -> {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) return options.requestFocus();
+                return keyCode == KeyEvent.KEYCODE_DPAD_LEFT;
+            });
+            options.setOnKeyListener((view, keyCode, event) -> {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return row.requestFocus();
+                return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+            });
             options.setTextSize(13);
             row.addView(options);
             row.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));

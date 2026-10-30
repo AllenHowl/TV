@@ -140,8 +140,8 @@ def main():
     edit(out / 'chaquo/build.gradle', '            version = "3.10"', '            version = "3.10"\n            buildPython rootProject.providers.gradleProperty("compatBuildPython").getOrElse("python3.10")')
 
     build = out / 'app/build.gradle'
-    edit(build, 'versionName "5.5.6"', 'versionName "5.5.6-sources-compat.2"')
-    edit(build, 'versionCode 556', 'versionCode 557')
+    edit(build, 'versionName "5.5.6"', 'versionName "5.5.6-sources-compat.3"')
+    edit(build, 'versionCode 556', 'versionCode 558')
     edit(build, '    buildFeatures {', '''    testOptions {
         unitTests.includeAndroidResources = true
         unitTests.all {
