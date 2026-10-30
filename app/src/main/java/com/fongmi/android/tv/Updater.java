@@ -45,13 +45,21 @@ public class Updater implements Download.Callback, UpdateListener {
         return Github.getApk(BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi);
     }
 
+    private boolean manualCompatibilityCheck;
+
     public Updater force() {
+        manualCompatibilityCheck = true;
         Notify.show(R.string.update_check);
         Setting.putUpdate(true);
         return this;
     }
 
     public void start(FragmentActivity activity) {
+        if (BuildConfig.APPLICATION_ID.endsWith(".sources")) {
+            if (manualCompatibilityCheck) Notify.show(R.string.compat_update_notice);
+            manualCompatibilityCheck = false;
+            return;
+        }
         if (!Setting.getUpdate()) return;
         Task.execute(() -> doInBackground(activity));
     }

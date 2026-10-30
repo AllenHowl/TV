@@ -74,26 +74,34 @@ public final class SubtitleDialog extends BaseBottomSheetDialog {
     }
 
     private void onUp(View view) {
-        subtitleView.addPosition(0.005f);
-        PlayerSetting.putSubtitlePosition(subtitleView.getPosition());
+        float position = Math.min(0.9f, PlayerSetting.getSubtitlePosition() + 0.005f);
+        subtitleView.setBottomPosition(position);
+        PlayerSetting.putSubtitlePosition(position);
         applySubtitleStyle();
     }
 
     private void onDown(View view) {
-        subtitleView.subPosition(0.005f);
-        PlayerSetting.putSubtitlePosition(subtitleView.getPosition());
+        float position = Math.max(-0.5f, PlayerSetting.getSubtitlePosition() - 0.005f);
+        subtitleView.setBottomPosition(position);
+        PlayerSetting.putSubtitlePosition(position);
         applySubtitleStyle();
     }
 
     private void onLarge(View view) {
-        subtitleView.addTextSize(0.002f);
-        PlayerSetting.putSubtitleTextSize(subtitleView.getTextSize());
+        float current = PlayerSetting.getSubtitleTextSize();
+        if (current <= 0) current = SubtitleView.DEFAULT_TEXT_SIZE_FRACTION;
+        float size = Math.min(0.15f, current + 0.002f);
+        subtitleView.setFractionalTextSize(size);
+        PlayerSetting.putSubtitleTextSize(size);
         applySubtitleStyle();
     }
 
     private void onSmall(View view) {
-        subtitleView.subTextSize(0.002f);
-        PlayerSetting.putSubtitleTextSize(subtitleView.getTextSize());
+        float current = PlayerSetting.getSubtitleTextSize();
+        if (current <= 0) current = SubtitleView.DEFAULT_TEXT_SIZE_FRACTION;
+        float size = Math.max(0.01f, current - 0.002f);
+        subtitleView.setFractionalTextSize(size);
+        PlayerSetting.putSubtitleTextSize(size);
         applySubtitleStyle();
     }
 

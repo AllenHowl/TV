@@ -5,6 +5,9 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.C;
+import androidx.media3.common.DolbyVisionOutputPolicy;
+import androidx.media3.exoplayer.trackselection.DecodeTrackSelector;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
@@ -33,7 +36,7 @@ import java.util.stream.Collectors;
 public class ExoUtil {
 
     public static ExoPlayer buildPlayer(int decode, Player.Listener listener) {
-        ExoPlayer player = new ExoPlayer.Builder(App.get()).setTrackSelector(buildTrackSelector()).setRenderersFactory(buildPlaybackRenderersFactory(decode)).setMediaSourceFactory(buildMediaSourceFactory()).build();
+        ExoPlayer player = new ExoPlayer.Builder(App.get()).setTrackSelector(buildTrackSelector(decode)).setRenderersFactory(buildPlaybackRenderersFactory(decode)).setMediaSourceFactory(buildMediaSourceFactory()).build();
         if (BuildConfig.DEBUG) player.addAnalyticsListener(new EventLogger());
         player.setAudioAttributes(AudioAttributes.DEFAULT, true);
         player.setHandleAudioBecomingNoisy(true);
@@ -54,12 +57,19 @@ public class ExoUtil {
         return extras.keySet().stream().filter(key -> extras.getString(key) != null).collect(Collectors.toMap(key -> key, extras::getString));
     }
 
+    static void configureDecode(DecodeTrackSelector selector, int decode) {
+        selector.setRendererDecodePreferences(
+                PlayerSetting.isAudioPrefer() ? C.DECODE_SOFTWARE : decode,
+                PlayerSetting.isVideoPrefer() ? C.DECODE_SOFTWARE : decode);
+    }
+
     private static int getRenderMode(int decode) {
         return decode == PlayerEngine.HARD ? DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER;
     }
 
-    private static TrackSelector buildTrackSelector() {
-        DefaultTrackSelector trackSelector = new DefaultTrackSelector(App.get());
+    private static TrackSelector buildTrackSelector(int decode) {
+        DecodeTrackSelector trackSelector = new DecodeTrackSelector(App.get());
+        configureDecode(trackSelector, decode);
         DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters();
         if (PlayerSetting.isPreferAAC()) builder.setPreferredAudioMimeType(MimeTypes.AUDIO_AAC);
         builder.setPreferredTextLanguages(LangUtil.getPreferredTextLanguages());
@@ -84,7 +94,7 @@ public class ExoUtil {
                 return ExoUtil.buildAudioSink(context, enableFloatOutput, enableAudioOutputPlaybackParams);
             }
         };
-        return factory.setFfmpegAudioPrefer(audioPrefer).setFfmpegVideoPrefer(videoPrefer).setEnableDecoderFallback(true).setEnableDv7HevcFallback(PlayerSetting.isDv7HevcFallback()).setExtensionRendererMode(renderMode);
+        return factory.setEnableDecoderFallback(true).setDolbyVisionOutputPolicy(PlayerSetting.isDv7HevcFallback() ? DolbyVisionOutputPolicy.AUTO : DolbyVisionOutputPolicy.ASSUME_SUPPORTED).setExtensionRendererMode(renderMode);
     }
 
     private static AudioSink buildAudioSink(Context context, boolean enableFloatOutput, boolean enableAudioOutputPlaybackParams) {

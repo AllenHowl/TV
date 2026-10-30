@@ -59,6 +59,7 @@ import com.fongmi.android.tv.ui.custom.CustomKeyDownLive;
 import com.fongmi.android.tv.ui.custom.CustomLiveListView;
 import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LiveDialog;
+import com.fongmi.android.tv.ui.dialog.SourceDialog;
 import com.fongmi.android.tv.ui.dialog.PassDialog;
 import com.fongmi.android.tv.ui.dialog.PlayerEngineDialog;
 import com.fongmi.android.tv.ui.dialog.SubtitleDialog;
@@ -404,7 +405,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     }
 
     private void onConfig() {
-        HistoryDialog.create().live().readOnly().show(this);
+        SourceDialog.show(this, 1);
         hideControl();
     }
 
@@ -851,7 +852,6 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
             @Override
             public void error(String msg) {
-                LiveConfig.load(config, new Callback());
                 Notify.show(msg);
                 hideProgress();
             }

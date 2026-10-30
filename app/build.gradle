@@ -17,7 +17,7 @@ android {
         minSdk libs.versions.minSdk.get().toInteger()
         targetSdk libs.versions.targetSdk.get().toInteger()
         versionCode 556
-        versionName "5.5.6"
+        versionName "5.5.6-sources-compat"
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString(), "eventBusIndex": "com.fongmi.android.tv.event.EventIndex"]
@@ -59,6 +59,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix ".sources"
+            signingConfig = signingConfigs.release
+        }
         release {
             minifyEnabled = true
             shrinkResources = true
@@ -100,6 +104,7 @@ androidComponents {
 }
 
 dependencies {
+    testImplementation libs.junit
     implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation project(':catvod')
     implementation project(':chaquo')

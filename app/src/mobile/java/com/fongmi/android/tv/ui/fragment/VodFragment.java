@@ -42,6 +42,7 @@ import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LinkDialog;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
+import com.fongmi.android.tv.ui.dialog.SourceDialog;
 import com.fongmi.android.tv.utils.ImgUtil;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
@@ -185,7 +186,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     private boolean onMenuItemClick(MenuItem item) {
-        if (item.getItemId() == R.id.keep) KeepActivity.start(requireActivity());
+        if (item.getItemId() == R.id.sourcePicker) SourceDialog.show(requireActivity(), 0);
+        else if (item.getItemId() == R.id.keep) KeepActivity.start(requireActivity());
         else if (item.getItemId() == R.id.search) SearchActivity.start(requireActivity());
         else if (item.getItemId() == R.id.history) HistoryActivity.start(requireActivity());
         return true;

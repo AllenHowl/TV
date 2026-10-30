@@ -35,6 +35,19 @@ public class BaseLoader {
         return Loader.INSTANCE;
     }
 
+    /** Retain the previous loader until a new VOD configuration commits. */
+    public static BaseLoader beginSwitch() {
+        BaseLoader previous = Loader.INSTANCE;
+        Loader.INSTANCE = new BaseLoader();
+        return previous;
+    }
+
+    public static void rollbackSwitch(BaseLoader previous) {
+        BaseLoader failed = Loader.INSTANCE;
+        Loader.INSTANCE = previous;
+        Task.execute(failed::clear);
+    }
+
     private static boolean isJs(String api) {
         return api.contains(".js");
     }

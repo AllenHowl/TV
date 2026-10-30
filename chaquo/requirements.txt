@@ -1,7 +1,18 @@
-lxml
-ujson
-pyquery
-requests
-cachetools
-pycryptodome
-beautifulsoup4
+# Resolved Android Python packages from the verified ARM64 compatibility build.
+beautifulsoup4==4.15.0
+cachetools==7.2.7
+certifi==2026.10.23
+chaquopy-libcxx==180000
+chaquopy-libxml2==2.9.8
+chaquopy-libxslt==1.1.32
+charset-normalizer==3.5.2
+cssselect==1.5.0
+idna==3.20
+lxml==5.3.0
+pycryptodome==3.21.0
+pyquery==2.1.0
+requests==2.34.2
+soupsieve==2.10
+typing_extensions==4.16.0
+ujson==5.11.0
+urllib3==2.8.0

@@ -28,6 +28,7 @@ import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.base.BaseActivity;
 import com.fongmi.android.tv.ui.dialog.ConfigDialog;
+import com.fongmi.android.tv.ui.dialog.SourceDialog;
 import com.fongmi.android.tv.ui.dialog.DohDialog;
 import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LiveDialog;
@@ -178,11 +179,11 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
     }
 
     private void onVod(View view) {
-        ConfigDialog.create().vod().show(this);
+        SourceDialog.show(this, 0);
     }
 
     private void onLive(View view) {
-        ConfigDialog.create().live().show(this);
+        SourceDialog.show(this, 1);
     }
 
     private void onWall(View view) {

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="source_manage">源管理</string>
+    <string name="source_vod">点播源</string>
+    <string name="source_live">直播源</string>
+    <string name="source_search">搜索源名称</string>
+    <string name="source_current">当前：%1$s</string>
+    <string name="source_none">未选择</string>
+    <string name="source_builtin">内置 · 播放待验证</string>
+    <string name="source_custom">自定义 / 历史记录</string>
+    <string name="source_active">当前使用</string>
+    <string name="source_options">线路 / 详情</string>
+    <string name="source_add">添加自定义源</string>
+    <string name="source_name">源名称（可选）</string>
+    <string name="source_url">配置或直播列表地址</string>
+    <string name="source_use">使用此源</string>
+    <string name="source_close">关闭</string>
+    <string name="source_later">稍后选择</string>
+    <string name="source_welcome">首次使用：选择源</string>
+    <string name="source_intro">点播、直播可以分别选择，也可稍后在设置中更改。</string>
+    <string name="source_loading">正在加载配置…</string>
+    <string name="source_loaded">配置已加载 · 播放待验证</string>
+    <string name="source_failed">加载失败，已保留原选择</string>
+    <string name="source_follow">跟随点播配置</string>
+    <string name="source_follow_empty">请先选择点播源</string>
+    <string name="source_url_error">请输入有效的 HTTP、HTTPS、file、assets 或 content 地址</string>
+    <string name="source_original">原始线路</string>
+    <string name="source_details">源详情</string>
+    <string name="source_details_text">%1$s\n%2$s\n\n配置可能需要下载外部运行资源；加载成功不代表已验证播放。</string>
+    <string name="source_select_line">选择线路</string>
+    <string name="source_empty">没有匹配的源</string>
+    <string name="source_show_all">显示完整目录</string>
+    <string name="source_show_recommended">仅显示推荐源</string>
+    <string name="compat_update_notice">这是源管理兼容版，请使用本项目生成的安装包更新。</string>
+</resources>

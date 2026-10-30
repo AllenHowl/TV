@@ -9,3 +9,9 @@
 lib-*.aar
 /Release
 /docs
+# Local setup and generated verification artifacts.
+/.compat-generated
+/.release-cache/
+/artifacts/
+__pycache__/
+*.pyc

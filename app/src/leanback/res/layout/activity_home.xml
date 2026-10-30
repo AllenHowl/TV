@@ -38,6 +38,19 @@
             android:textColor="@color/white"
             android:textSize="24sp" />
 
+        <Button
+            android:id="@+id/sourcePicker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/selector_item"
+            android:focusable="true"
+            android:minHeight="48dp"
+            android:paddingHorizontal="16dp"
+            android:text="@string/source_vod"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/clock"
             android:layout_width="wrap_content"

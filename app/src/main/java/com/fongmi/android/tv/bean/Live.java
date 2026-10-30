@@ -9,6 +9,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.loader.BaseLoader;
@@ -32,6 +33,18 @@ import java.util.concurrent.TimeUnit;
 
 @Entity
 public class Live {
+
+    @Ignore
+    private transient String settingsUrl;
+
+    public Live settingsUrl(String url) {
+        settingsUrl = url;
+        return this;
+    }
+
+    public String getSettingsUrl() {
+        return settingsUrl == null ? LiveConfig.getUrl() : settingsUrl;
+    }
 
     @NonNull
     @PrimaryKey
@@ -374,6 +387,7 @@ public class Live {
 
     public void save() {
         AppDatabase.get().getLiveDao().insertOrUpdate(this);
+        com.fongmi.android.tv.source.SourceSettings.save(1, getSettingsUrl(), List.of(this));
     }
 
     @Override

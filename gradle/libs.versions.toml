@@ -1,4 +1,5 @@
 [versions]
+junit = "4.13.2"
 agp = "9.2.1"
 python = "17.0.0"
 minSdk = "24"
@@ -51,6 +52,7 @@ zxingAndroidEmbedded = "4.3.0"
 zxingCore = "3.5.4"
 
 [libraries]
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }

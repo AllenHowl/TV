@@ -3,6 +3,9 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.source.SourceContent;
+import com.fongmi.android.tv.source.SourcePreferences;
+import com.fongmi.android.tv.source.SourceSettings;
 import com.fongmi.android.tv.api.Decoder;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.bean.Config;
@@ -66,7 +69,7 @@ public class VodConfig extends BaseConfig {
     }
 
     public static void load(Config config, Callback callback) {
-        get().clear().config(config).load(callback);
+        get().switchConfig(config, callback);
     }
 
     public VodConfig init() {
@@ -94,6 +97,32 @@ public class VodConfig extends BaseConfig {
     }
 
     @Override
+    protected void prepare(Config target) {
+        // A fresh loader has already been staged; do not destroy the retained one.
+        ads = null; doh = null; home = null; wall = null; parse = null;
+        sites = null; flags = null; rules = null; parses = null;
+        super.prepare(target);
+    }
+
+    @Override
+    protected Runnable snapshotState() {
+        Runnable base = super.snapshotState();
+        Site oldHome = home; String oldWall = wall; Parse oldParse = parse;
+        List<Doh> oldDoh = doh; List<Rule> oldRules = rules; List<Site> oldSites = sites;
+        List<String> oldAds = ads; List<String> oldFlags = flags; List<Parse> oldParses = parses;
+        return () -> {
+            home = oldHome; wall = oldWall; parse = oldParse; doh = oldDoh;
+            rules = oldRules; sites = oldSites; ads = oldAds; flags = oldFlags; parses = oldParses;
+            base.run();
+        };
+    }
+
+    @Override
+    protected void afterLoaded() {
+        if (SourcePreferences.followsVod() && !LiveConfig.get().getConfig().isEmpty()) LiveConfig.get().getConfig().update();
+    }
+
+    @Override
     protected String getTag() {
         return TAG;
     }
@@ -112,6 +141,7 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+        SourceContent.requireContent(json);
         checkJson(config, Json.parse(json).getAsJsonObject());
     }
 
@@ -140,14 +170,15 @@ public class VodConfig extends BaseConfig {
     }
 
     private void parseConfig(Config config, JsonObject object) {
+        if (!object.has("sites") || !object.get("sites").isJsonArray() || object.getAsJsonArray("sites").isEmpty()) throw new IllegalArgumentException("No sites in configuration");
         initList(object);
-        initLive(config, object);
         initWall(config, object);
         initSite(config, object);
         initParse(config, object);
         config.setLogo(Json.safeString(object, "logo"));
         config.setNotice(Json.safeString(object, "notice"));
         config.setDanmaku(Json.safeString(object, "danmaku"));
+        initLive(config, object);
     }
 
     private void initList(JsonObject object) {
@@ -161,10 +192,11 @@ public class VodConfig extends BaseConfig {
     }
 
     private void initLive(Config config, JsonObject object) {
-        if (Json.isEmpty(object, "lives")) return;
+        if (!SourcePreferences.followsVod()) return;
+        if (Json.isEmpty(object, "lives")) { LiveConfig.get().prepare(Config.create(LIVE)); return; }
         Config temp = Config.find(config, LIVE).save();
         boolean sync = LiveConfig.get().needSync(config.getUrl());
-        if (sync) LiveConfig.get().config(temp.update()).parse(object);
+        if (sync) LiveConfig.get().config(temp).parse(object);
     }
 
     private void initWall(Config config, JsonObject object) {
@@ -179,8 +211,8 @@ public class VodConfig extends BaseConfig {
         String spider = Json.safeString(object, "spider");
         BaseLoader.get().parseJar(spider, true);
         setSites(Json.safeListElement(object, "sites").stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
-        Map<String, Site> items = Site.findAll().stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
-        getSites().forEach(site -> site.sync(items.get(site.getKey())));
+        Map<String, Site> items = SourceSettings.sites(config.getUrl()).stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
+        getSites().forEach(site -> site.settingsUrl(config.getUrl()).sync(items.get(site.getKey())));
         setHome(config, getSites().isEmpty() ? new Site() : getSites().stream().filter(item -> item.getKey().equals(config.getHome())).findFirst().orElse(getSites().get(0)), false);
     }
 

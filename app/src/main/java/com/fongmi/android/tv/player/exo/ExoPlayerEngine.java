@@ -54,7 +54,11 @@ public class ExoPlayerEngine implements PlayerEngine {
     @Override
     public boolean setDecode(int decode) {
         this.decode = decode;
-        return true;
+        if (player.getTrackSelector() instanceof androidx.media3.exoplayer.trackselection.DecodeTrackSelector selector) {
+            ExoUtil.configureDecode(selector, decode);
+            return true;
+        }
+        return false;
     }
 
     @Override

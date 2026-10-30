@@ -11,6 +11,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.db.AppDatabase;
@@ -33,6 +34,18 @@ import java.util.concurrent.TimeUnit;
 
 @Entity
 public class Site implements Parcelable {
+
+    @Ignore
+    private transient String settingsUrl;
+
+    public Site settingsUrl(String url) {
+        settingsUrl = url;
+        return this;
+    }
+
+    public String getSettingsUrl() {
+        return settingsUrl == null ? VodConfig.getUrl() : settingsUrl;
+    }
 
     @NonNull
     @PrimaryKey
@@ -332,6 +345,7 @@ public class Site implements Parcelable {
 
     public void save() {
         AppDatabase.get().getSiteDao().insertOrUpdate(this);
+        com.fongmi.android.tv.source.SourceSettings.save(0, getSettingsUrl(), List.of(this));
     }
 
     @Override

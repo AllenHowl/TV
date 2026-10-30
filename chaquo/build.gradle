@@ -13,6 +13,7 @@ android {
         targetSdk libs.versions.targetSdk.get().toInteger()
         python {
             version = "3.10"
+            buildPython rootProject.providers.gradleProperty("compatBuildPython").getOrElse("python3.10")
             pip {
                 install("-r", "requirements.txt")
             }

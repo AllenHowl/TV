@@ -1,0 +1,4 @@
+sdk.dir=/path/to/android-sdk
+storeFile=/path/to/debug.jks
+keyAlias=androiddebugkey
+storePassword=android

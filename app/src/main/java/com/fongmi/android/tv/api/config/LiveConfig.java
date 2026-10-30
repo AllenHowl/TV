@@ -3,6 +3,9 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.api.Decoder;
+import com.fongmi.android.tv.source.SourceContent;
+import com.fongmi.android.tv.source.SourcePreferences;
+import com.fongmi.android.tv.source.SourceSettings;
 import com.fongmi.android.tv.api.LiveApi;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.api.parser.LiveParser;
@@ -73,7 +76,18 @@ public class LiveConfig extends BaseConfig {
     }
 
     public static void load(Config config, Callback callback) {
-        get().clear().config(config).load(callback);
+        load(config, callback, false);
+    }
+
+    public static void loadFollowing(Config config, Callback callback) {
+        load(config, callback, true);
+    }
+
+    private static void load(Config config, Callback callback, boolean follow) {
+        get().switchConfig(config, callback, () -> {
+            SourcePreferences.followVod(follow);
+            get().sync = follow && getUrl().equals(VodConfig.getUrl());
+        });
     }
 
     public LiveConfig init() {
@@ -83,7 +97,7 @@ public class LiveConfig extends BaseConfig {
     public LiveConfig config(Config config) {
         this.config = config;
         if (config.isEmpty()) return this;
-        this.sync = config.getUrl().equals(VodConfig.getUrl());
+        this.sync = SourcePreferences.followsVod() && config.getUrl().equals(VodConfig.getUrl());
         return this;
     }
 
@@ -94,6 +108,26 @@ public class LiveConfig extends BaseConfig {
         rules = null;
         RuleConfig.get().invalidate();
         return this;
+    }
+
+    @Override
+    public boolean needSync(String url) {
+        return SourcePreferences.followsVod();
+    }
+
+    @Override
+    protected void prepare(Config target) {
+        home = null; lives = null; rules = null; ads = null;
+        super.prepare(target);
+        config(target);
+    }
+
+    @Override
+    protected Runnable snapshotState() {
+        Runnable base = super.snapshotState();
+        Live oldHome = home; List<Live> oldLives = lives;
+        List<Rule> oldRules = rules; List<String> oldAds = ads;
+        return () -> { home = oldHome; lives = oldLives; rules = oldRules; ads = oldAds; base.run(); };
     }
 
     @Override
@@ -115,6 +149,7 @@ public class LiveConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+        SourceContent.requireContent(json);
         if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());
         else parseText(config, json);
     }
@@ -141,8 +176,10 @@ public class LiveConfig extends BaseConfig {
         load(new Callback());
     }
 
-    private void parseText(Config config, String text) {
-        Live live = new Live(UrlUtil.getName(config.getUrl()), config.getUrl()).sync();
+    private void parseText(Config config, String text) throws java.io.IOException {
+        SourceContent.requirePlaylist(text);
+        Live live = new Live(UrlUtil.getName(config.getUrl()), config.getUrl()).settingsUrl(config.getUrl());
+        SourceSettings.lives(config.getUrl()).stream().filter(item -> item.getName().equals(live.getName())).findFirst().ifPresent(live::sync);
         lives = new ArrayList<>(List.of(live));
         LiveParser.text(live, text);
         setHome(config, live, false);
@@ -168,6 +205,7 @@ public class LiveConfig extends BaseConfig {
     }
 
     private void parseConfig(Config config, JsonObject object) {
+        if (!object.has("lives") || !object.get("lives").isJsonArray() || object.getAsJsonArray("lives").isEmpty()) throw new IllegalArgumentException("No live sources in configuration");
         initList(object);
         initLive(config, object);
     }
@@ -188,8 +226,8 @@ public class LiveConfig extends BaseConfig {
         String spider = Json.safeString(object, "spider");
         BaseLoader.get().parseJar(spider, false);
         setLives(Json.safeListElement(object, "lives").stream().map(e -> Live.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
-        Map<String, Live> items = Live.findAll().stream().collect(Collectors.toMap(Live::getName, Function.identity()));
-        getLives().forEach(live -> live.sync(items.get(live.getName())));
+        Map<String, Live> items = SourceSettings.lives(config.getUrl()).stream().collect(Collectors.toMap(Live::getName, Function.identity()));
+        getLives().forEach(live -> live.settingsUrl(config.getUrl()).sync(items.get(live.getName())));
         setHome(config, getLives().isEmpty() ? new Live() : getLives().stream().filter(item -> item.getName().equals(config.getHome())).findFirst().orElse(getLives().get(0)), false);
     }
 

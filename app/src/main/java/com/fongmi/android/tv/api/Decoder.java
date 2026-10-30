@@ -24,6 +24,7 @@ public class Decoder {
 
     public static String getJson(String url, String tag) throws Exception {
         try (Response res = OkHttp.newCall(url, tag).execute()) {
+            if (!res.isSuccessful()) throw new java.io.IOException("Source HTTP " + res.code());
             HttpUrl httpUrl = res.request().url();
             int size = HttpUrl.parse(url).querySize();
             if (httpUrl.querySize() == size) url = httpUrl.toString();

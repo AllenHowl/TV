@@ -1,6 +1,5 @@
 package com.fongmi.android.tv.player.exo;
 
-import static androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory.FLAG_ENABLE_HDMV_DTS_AUDIO_STREAMS;
 
 import androidx.annotation.NonNull;
 import androidx.media3.common.C;
@@ -97,7 +96,7 @@ public class MediaSourceFactory implements MediaSource.Factory {
     }
 
     private ExtractorsFactory getExtractorsFactory() {
-        if (extractorsFactory == null) extractorsFactory = new DefaultExtractorsFactory().setTsExtractorFlags(FLAG_ENABLE_HDMV_DTS_AUDIO_STREAMS).setTsExtractorTimestampSearchBytes(TsExtractor.DEFAULT_TIMESTAMP_SEARCH_BYTES * 10);
+        if (extractorsFactory == null) extractorsFactory = new DefaultExtractorsFactory().setTsExtractorTimestampSearchBytes(TsExtractor.DEFAULT_TIMESTAMP_SEARCH_BYTES * 10);
         return extractorsFactory;
     }
 
