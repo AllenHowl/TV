@@ -38,6 +38,7 @@ def main():
     source_app = ROOT / 'app/src/main/java/com/fongmi/android/tv'
     shutil.copytree(source_app / 'source', app / 'source', dirs_exist_ok=True)
     shutil.copy(source_app / 'ui/dialog/SourceDialog.java', app / 'ui/dialog/SourceDialog.java')
+    shutil.copy(source_app / 'ui/dialog/SourceDialogLayout.java', app / 'ui/dialog/SourceDialogLayout.java')
     edit(app / 'ui/dialog/SourceDialog.java', '"leanback".equals(BuildConfig.FLAVOR)', 'BuildConfig.FLAVOR.startsWith("leanback")')
     for folder in ['values', 'values-zh-rCN', 'values-zh-rTW']:
         shutil.copy(ROOT / 'app/src/main/res' / folder / 'sources.xml', out / 'app/src/main/res' / folder / 'sources.xml')
@@ -139,13 +140,22 @@ def main():
     edit(out / 'chaquo/build.gradle', '            version = "3.10"', '            version = "3.10"\n            buildPython rootProject.providers.gradleProperty("compatBuildPython").getOrElse("python3.10")')
 
     build = out / 'app/build.gradle'
-    edit(build, 'versionName "5.5.6"', 'versionName "5.5.6-sources-compat"')
+    edit(build, 'versionName "5.5.6"', 'versionName "5.5.6-sources-compat.2"')
+    edit(build, 'versionCode 556', 'versionCode 557')
+    edit(build, '    buildFeatures {', '''    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+        }
+    }
+
+    buildFeatures {''')
     edit(build, '    buildTypes {', '''    buildTypes {
         debug {
             applicationIdSuffix ".sources"
             signingConfig = signingConfigs.release
         }''')
-    edit(build, '    implementation fileTree', '    testImplementation libs.junit\n    implementation fileTree')
+    edit(build, '    implementation fileTree', "    testImplementation libs.junit\n    testImplementation 'org.robolectric:robolectric:4.16.1'\n    implementation fileTree")
     # Independent app ID also requires matching FileProvider authorities from the manifest.
     shutil.copy(ROOT / 'local.properties', out / 'local.properties')
     shutil.copy(ROOT / 'tools/compat/requirements.txt', out / 'chaquo/requirements.txt')

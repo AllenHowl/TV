@@ -48,5 +48,5 @@ artifacts=list(root.rglob('outputs/aar/*-release.aar'))
 assert len(artifacts)>=18,'Expected public player AARs were not produced'
 for path in artifacts:shutil.copy2(path,target/path.name)
 PY
-(cd "$compat_root" && bash gradlew --no-configuration-cache --max-workers=2 "-PcompatBuildPython=$build_python" :app:assembleLeanbackArm64_v8aDebug :app:assembleMobileArm64_v8aDebug :app:testLeanbackArm64_v8aDebugUnitTest)
+(cd "$compat_root" && bash gradlew --no-configuration-cache --max-workers=2 "-PcompatBuildPython=$build_python" :app:assembleLeanbackArm64_v8aDebug :app:assembleMobileArm64_v8aDebug :app:assembleLeanbackArmeabi_v7aDebug :app:assembleMobileArmeabi_v7aDebug :app:testLeanbackArmeabi_v7aDebugUnitTest :app:testMobileArmeabi_v7aDebugUnitTest)
 python3 "$source_root/tools/verify_compat.py" --project "$compat_root" --output "$source_root/artifacts"

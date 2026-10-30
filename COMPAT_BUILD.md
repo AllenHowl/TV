@@ -1,8 +1,10 @@
 # TV Sources 兼容版构建与交付
 
-已生成电视版和手机版 ARM64 Debug APK，包名 `com.fongmi.android.tv.sources`，版本 `5.5.6-sources-compat`，最低 Android 7.0（API 24）。两种界面使用同一包名，应按设备选择一个安装；可与原版 `com.fongmi.android.tv` 并存。
+已生成电视版和手机版 ARM32 / ARM64 Debug APK，包名 `com.fongmi.android.tv.sources`，版本 `5.5.6-sources-compat.2`（版本代码 557），最低 Android 7.0（API 24）。两种界面使用同一包名，应按设备选择一个安装；可与原版 `com.fongmi.android.tv` 并存。沿用初版签名，可以覆盖更新初版 TV Sources。
 
-安装包位于 `artifacts/TV-Sources-tv-arm64-debug.apk` 和 `artifacts/TV-Sources-mobile-arm64-debug.apk`，校验和与包信息见同目录 `SHA256SUMS`、`build-info.json`。
+本次修复源管理列表高度为 0、底部按钮被裁切的问题。弹窗提供确定的内容高度，并为列表保留视口；短屏或大字号时顶部控件可滚动。Robolectric 使用实际弹窗复现修复前列表高度为 0，修复后验证推荐目录、56 项完整目录及末项滚动、2 项直播、遥控器焦点、短横屏、竖屏和大字号。
+
+安装包位于 `artifacts/TV-Sources-{tv,mobile}-{arm32,arm64}-debug.apk`，校验和与包信息见同目录 `SHA256SUMS`、`build-info.json`。
 
 ## 采用的路线
 
@@ -34,10 +36,10 @@ JAVA_HOME=/workspace/.gradle/jdks/jetbrains_s_r_o_-21-amd64-linux.2 bash tools/b
 ## 验证结果
 
 - 18 个公开媒体 AAR 构建成功。
-- 电视版、手机版 ARM64 Debug APK 构建成功。
-- 兼容工程的 Gradle 单元测试 11 项通过。
+- 电视版、手机版 ARM32 / ARM64 Debug APK 构建成功。
+- 兼容工程的电视、手机版各 18 项 Gradle 检查通过，包括各 7 项实际弹窗布局回归；两种界面的测试用例有重叠。
 - 对实际配置加载队列与目录校验执行的独立回归测试 13 项通过（与 Gradle 的 11 项有重叠，不应相加为 24 项独立测试）。
-- 两份 APK 的 v2 签名、独立包名、版本、最低系统版本、ARM64 架构、内置目录和源管理类检查通过。
+- 四份 APK 的 v2 签名、独立包名、版本、最低系统版本、对应 ARM 架构、内置目录和源管理类检查通过。
 - 根目录的 26 个原生库依赖均可在 APK 或 Android 系统库中解析；ELF LOAD 段对齐均达到 16 KB。此检查不等同于在 16 KB 真机上验证。
 - 环境没有连接 Android 设备，也没有 KVM 设备；安装、遥控器焦点、切源及实际播放未进行真机验证。
 

@@ -54,6 +54,13 @@ android {
         viewBinding = true
     }
 
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+        }
+    }
+
     signingConfigs {
         release {
             storeFile file(localProps['storeFile'])
@@ -100,6 +107,7 @@ AbiApkPackaging.configure(project, SingleArtifact.APK.INSTANCE)
 
 dependencies {
     testImplementation libs.junit
+    testImplementation 'org.robolectric:robolectric:4.16.1'
     implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation project(':catvod')
     implementation libs.appcompat
