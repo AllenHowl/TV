@@ -91,7 +91,9 @@ public class Config {
     }
 
     public static Config vod() {
-        Config item = AppDatabase.get().getConfigDao().findOne(0);
+        String url = Prefers.getString("config_0");
+        Config item = TextUtils.isEmpty(url) ? null : AppDatabase.get().getConfigDao().find(url, 0);
+        if (item == null) item = AppDatabase.get().getConfigDao().findOne(0);
         return item == null ? create(0) : item;
     }
 

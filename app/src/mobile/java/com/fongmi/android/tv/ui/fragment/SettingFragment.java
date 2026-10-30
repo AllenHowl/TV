@@ -31,6 +31,7 @@ import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.HomeActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.ConfigDialog;
+import com.fongmi.android.tv.ui.dialog.SourceDialog;
 import com.fongmi.android.tv.ui.dialog.DeviceConnectDialog;
 import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LiveDialog;
@@ -207,11 +208,11 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     }
 
     private void onVod(View view) {
-        ConfigDialog.create().vod().show(this);
+        SourceDialog.show(requireActivity(), 0);
     }
 
     private void onLive(View view) {
-        ConfigDialog.create().live().show(this);
+        SourceDialog.show(requireActivity(), 1);
     }
 
     private void onWall(View view) {

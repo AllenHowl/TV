@@ -11,6 +11,7 @@ import com.fongmi.android.tv.bean.Group;
 import com.fongmi.android.tv.bean.Live;
 import com.fongmi.android.tv.exception.ExtractException;
 import com.fongmi.android.tv.utils.UrlUtil;
+import com.fongmi.android.tv.source.SourceContent;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Auth;
 import com.github.catvod.utils.Json;
@@ -68,6 +69,8 @@ public class LiveParser {
         try (Response response = OkHttp.newCall(url, headers, Auth.Context.NONE).execute()) {
             String text = response.body().string();
             if (live.getUrl().startsWith("proxy://") && !response.isSuccessful()) throw new ExtractException(text);
+            if (!response.isSuccessful()) throw new java.io.IOException("Live source HTTP " + response.code());
+            SourceContent.requireContent(text);
             if (response.isSuccessful()) live.setAuth(Auth.capture(live.getUrl(), headers, response.request().url().toString(), response.request().header(HttpHeaders.AUTHORIZATION)));
             return text;
         }

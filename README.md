@@ -1,5 +1,7 @@
 # 影視TV
 
+当前工作区新增的内置源管理及可安装兼容版见 [COMPAT_BUILD.md](COMPAT_BUILD.md)。
+
 Android TV、手機、平板都能用，支援本地檔案與網址播放。
 
 [使用指南](https://fongmi.github.io/TV) · [討論群組](https://t.me/fongmi_official)

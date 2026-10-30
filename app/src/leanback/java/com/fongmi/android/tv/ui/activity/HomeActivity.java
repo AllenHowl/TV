@@ -27,6 +27,7 @@ import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.Updater;
 import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.ui.dialog.SourceDialog;
 import com.fongmi.android.tv.api.config.WallConfig;
 import com.fongmi.android.tv.api.node.NodeRuntime;
 import com.fongmi.android.tv.bean.Cache;
@@ -153,6 +154,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     protected void initEvent() {
         mBinding.title.setListener(this);
+        mBinding.sourcePicker.setOnClickListener(view -> SourceDialog.show(this, 0));
         mBinding.recycler.addOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
             @Override
             public void onChildViewHolderSelected(@NonNull RecyclerView parent, @Nullable RecyclerView.ViewHolder child, int position, int subposition) {
@@ -229,7 +231,8 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     }
 
     private void initConfig() {
-        VodConfig.get().init().load(getCallback());
+        if (Config.vod().isEmpty()) onConfigReady();
+        else VodConfig.get().init().load(getCallback());
         LiveConfig.get().init().load();
         WallConfig.get().init();
     }
@@ -250,6 +253,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     }
 
     private void onConfigReady() {
+        SourceDialog.offer(this);
         actionReady = true;
         showContent();
         consumeAction();

@@ -3,6 +3,7 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.event.ConfigEvent;
@@ -15,6 +16,7 @@ import com.github.catvod.bean.Proxy;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Task;
+import com.github.catvod.utils.Prefers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -24,6 +26,9 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 abstract class BaseConfig {
@@ -31,6 +36,14 @@ abstract class BaseConfig {
     public static final int VOD = 0;
     public static final int LIVE = 1;
     public static final int WALL = 2;
+
+    // All configuration mutations share one queue: cancellation cannot leave an older
+    // parser writing into the singleton after a newer selection has started.
+    private static final Object STATE_LOCK = new Object();
+    private static final ExecutorService LOADS = Executors.newSingleThreadExecutor();
+    private List<Header> headers = List.of();
+    private List<Proxy> proxies = List.of();
+    private List<String> hosts = List.of();
 
     private final AtomicInteger taskId = new AtomicInteger(0);
     private final Object loadLock = new Object();
@@ -55,7 +68,7 @@ abstract class BaseConfig {
             if (isLoaded()) return;
             if (config == null) config = defaultConfig();
             Server.get().start();
-            load(config);
+            synchronized (STATE_LOCK) { load(config); }
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -75,27 +88,85 @@ abstract class BaseConfig {
     }
 
     protected void setHeaders(List<Header> headers) {
-        OkHttp.responseInterceptor().addAll(headers);
+        this.headers = headers;
+        refreshNetwork();
     }
 
     protected void setProxy(List<Proxy> proxy) {
-        OkHttp.selector().addAll(proxy);
+        this.proxies = proxy;
+        refreshNetwork();
     }
 
     protected void setHosts(List<String> hosts) {
-        OkHttp.dns().addAll(hosts);
+        this.hosts = hosts;
+        refreshNetwork();
+    }
+
+    private static void refreshNetwork() {
+        OkHttp.responseInterceptor().clear();
+        OkHttp.selector().clear();
+        OkHttp.dns().clear();
+        for (BaseConfig source : List.of(VodConfig.get(), LiveConfig.get())) {
+            OkHttp.responseInterceptor().addAll(source.headers);
+            OkHttp.selector().addAll(source.proxies);
+            OkHttp.dns().addAll(source.hosts);
+        }
+    }
+
+    protected Runnable snapshotState() {
+        Config previous = this.config == null ? null : Config.objectFrom(this.config.toString());
+        boolean previousSync = sync;
+        int type = this instanceof VodConfig ? VOD : this instanceof LiveConfig ? LIVE : WALL;
+        String selected = Prefers.getString("config_" + type);
+        List<Header> previousHeaders = headers;
+        List<Proxy> previousProxies = proxies;
+        List<String> previousHosts = hosts;
+        return () -> {
+            this.config = previous;
+            sync = previousSync;
+            Prefers.put("config_" + type, selected);
+            headers = previousHeaders;
+            proxies = previousProxies;
+            hosts = previousHosts;
+            refreshNetwork();
+            RuleConfig.get().invalidate();
+        };
+    }
+
+    protected void prepare(Config target) {
+        this.config = target;
+        headers = List.of();
+        proxies = List.of();
+        hosts = List.of();
+        refreshNetwork();
+    }
+
+    protected void afterLoaded() {
     }
 
     public void load(Callback callback) {
+        submit(getConfig(), callback, false, () -> {});
+    }
+
+    protected void switchConfig(Config target, Callback callback) {
+        submit(target, callback, true, () -> {});
+    }
+
+    protected void switchConfig(Config target, Callback callback, Runnable committed) {
+        submit(target, callback, true, committed);
+    }
+
+    private void submit(Config target, Callback callback, boolean switching, Runnable committed) {
         synchronized (loadLock) {
             int id = taskId.incrementAndGet();
             if (future != null && !future.isDone()) {
                 cancelLoad();
+                OkHttp.cancel(getTag());
                 future.cancel(true);
             }
-            future = Task.submit(() -> loadConfig(id, config, callback));
+            callback.start();
+            future = LOADS.submit(() -> loadConfig(id, target, callback, switching, committed));
         }
-        callback.start();
     }
 
     public void cancel() {
@@ -107,32 +178,50 @@ abstract class BaseConfig {
         }
     }
 
-    protected void loadConfig(int id, Config config, Callback callback) {
-        try {
-            Server.get().start();
-            OkHttp.cancel(getTag());
-            load(config);
+    private void loadConfig(int id, Config target, Callback callback, boolean switching, Runnable committed) {
+        synchronized (STATE_LOCK) {
             if (taskId.get() != id) return;
-            completeLoad(id, config, callback);
-        } catch (Throwable e) {
-            if (isCanceled(e)) return;
-            e.printStackTrace();
-            if (taskId.get() != id) return;
-            App.post(() -> {
-                if (taskId.get() == id) callback.error(TextUtils.isEmpty(config.getUrl()) ? "" : Notify.getError(R.string.error_config_get, e));
-            });
+            Runnable restore = snapshotState();
+            Runnable restoreLive = this instanceof VodConfig ? LiveConfig.get().snapshotState() : () -> {};
+            BaseLoader previousLoader = null;
+            try {
+                Server.get().start();
+                OkHttp.cancel(getTag());
+                if (switching) {
+                    if (this instanceof VodConfig) previousLoader = BaseLoader.beginSwitch();
+                    prepare(target);
+                }
+                load(target);
+                synchronized (loadLock) {
+                    if (taskId.get() != id || Thread.currentThread().isInterrupted()) throw new CancellationException();
+                    afterLoaded();
+                    if (this.config != null && !this.config.isEmpty()) this.config.update();
+                    committed.run();
+                }
+                if (previousLoader != null) {
+                    BaseLoader retired = previousLoader;
+                    Task.execute(retired::clear);
+                }
+                App.post(() -> {
+                    if (taskId.get() != id) return;
+                    Notify.show(target.getNotice());
+                    callback.success();
+                    postEvent();
+                });
+            } catch (Throwable e) {
+                // Restore references, request policy and the original spider loader even
+                // when the canceled attempt is no longer allowed to notify its caller.
+                restoreLive.run();
+                restore.run();
+                if (previousLoader != null) BaseLoader.rollbackSwitch(previousLoader);
+                if (isCanceled(e) || taskId.get() != id) return;
+                e.printStackTrace();
+                App.post(() -> {
+                    if (taskId.get() != id) return;
+                    callback.error(TextUtils.isEmpty(target.getUrl()) ? "" : Notify.getError(R.string.error_config_get, e));
+                });
+            }
         }
-        if (taskId.get() == id) postEvent();
-    }
-
-    private void completeLoad(int id, Config config, Callback callback) {
-        if (config.equals(this.config)) config.update();
-        String notice = config.getNotice();
-        App.post(() -> {
-            if (taskId.get() != id) return;
-            Notify.show(notice);
-            callback.success();
-        });
     }
 
     protected boolean isCanceled(Throwable e) {

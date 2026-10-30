@@ -23,4 +23,9 @@
         app:iconTint="@color/white"
         app:showAsAction="always" />
 
+    <item
+        android:id="@+id/sourcePicker"
+        android:title="@string/source_manage"
+        app:showAsAction="never" />
+
 </menu>

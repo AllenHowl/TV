@@ -13,6 +13,7 @@ import androidx.room.PrimaryKey;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.api.loader.BaseLoader;
+import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.db.AppDatabase;
 import com.fongmi.android.tv.gson.ExtAdapter;
 import com.fongmi.android.tv.gson.HeaderAdapter;
@@ -35,6 +36,18 @@ import java.util.concurrent.TimeUnit;
 
 @Entity
 public class Site implements Parcelable {
+
+    @Ignore
+    private transient String settingsUrl;
+
+    public Site settingsUrl(String url) {
+        settingsUrl = url;
+        return this;
+    }
+
+    public String getSettingsUrl() {
+        return settingsUrl == null ? VodConfig.getUrl() : settingsUrl;
+    }
 
     @NonNull
     @PrimaryKey
@@ -360,12 +373,16 @@ public class Site implements Parcelable {
     public static void saveSettings(List<Site> items) {
         List<Site> snapshots = new ArrayList<>(items.size());
         for (Site item : items) snapshots.add(item.snapshot());
+        Map<String, List<Site>> scoped = new HashMap<>();
+        for (Site item : snapshots) scoped.computeIfAbsent(item.getSettingsUrl(), ignored -> new ArrayList<>()).add(item);
+        scoped.forEach((url, options) -> com.fongmi.android.tv.source.SourceSettings.save(0, url, options));
         Task.executeSerial(() -> AppDatabase.get().getSiteDao().insertOrUpdate(snapshots));
     }
 
     private Site snapshot() {
         Site item = new Site();
         item.key = key;
+        item.settingsUrl = getSettingsUrl();
         item.searchable = searchable;
         item.changeable = changeable;
         return item;

@@ -99,6 +99,7 @@ android {
 AbiApkPackaging.configure(project, SingleArtifact.APK.INSTANCE)
 
 dependencies {
+    testImplementation libs.junit
     implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation project(':catvod')
     implementation libs.appcompat

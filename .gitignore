@@ -62,3 +62,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Keep source-management regression tests reviewable.
+!app/src/test/
+!tools/test_sources.py
+
+# Generated installable application artifacts.
+/artifacts/

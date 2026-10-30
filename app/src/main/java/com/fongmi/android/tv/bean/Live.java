@@ -12,6 +12,7 @@ import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.loader.BaseLoader;
+import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.db.AppDatabase;
 import com.fongmi.android.tv.gson.ExtAdapter;
 import com.fongmi.android.tv.gson.HeaderAdapter;
@@ -34,6 +35,18 @@ import java.util.concurrent.TimeUnit;
 
 @Entity
 public class Live {
+
+    @Ignore
+    private transient String settingsUrl;
+
+    public Live settingsUrl(String url) {
+        settingsUrl = url;
+        return this;
+    }
+
+    public String getSettingsUrl() {
+        return settingsUrl == null ? LiveConfig.getUrl() : settingsUrl;
+    }
 
     @NonNull
     @PrimaryKey
@@ -387,6 +400,7 @@ public class Live {
 
     public void save() {
         AppDatabase.get().getLiveDao().insertOrUpdate(this);
+        com.fongmi.android.tv.source.SourceSettings.save(1, getSettingsUrl(), List.of(this));
     }
 
     public void saveSettings() {
@@ -395,7 +409,10 @@ public class Live {
 
     public static void saveSettings(List<Live> items) {
         List<Live> snapshots = new ArrayList<>(items.size());
-        for (Live item : items) snapshots.add(new Live(item.getName(), item.getUrl()).sync(item));
+        for (Live item : items) snapshots.add(new Live(item.getName(), item.getUrl()).settingsUrl(item.getSettingsUrl()).sync(item));
+        Map<String, List<Live>> scoped = new HashMap<>();
+        for (Live item : snapshots) scoped.computeIfAbsent(item.getSettingsUrl(), ignored -> new ArrayList<>()).add(item);
+        scoped.forEach((url, options) -> com.fongmi.android.tv.source.SourceSettings.save(1, url, options));
         Task.executeSerial(() -> AppDatabase.get().getLiveDao().saveSettings(snapshots));
     }
 
