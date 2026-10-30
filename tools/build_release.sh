@@ -29,4 +29,4 @@ if [[ ! -f local.properties ]]; then
     keytool -genkeypair -keystore "$cache/debug.jks" -storepass android -keypass android -alias androiddebugkey -dname 'CN=Android Debug,O=Android,C=US' -keyalg RSA -keysize 2048 -validity 10000 -noprompt
     printf 'sdk.dir=%s\nstoreFile=%s\nkeyAlias=androiddebugkey\nstorePassword=android\n' "$ANDROID_HOME" "$cache/debug.jks" > local.properties
 fi
-bash gradlew --no-configuration-cache --max-workers=2 "-PcompatBuildPython=$build_python" :app:assembleLeanbackArm64_v8aDebug :app:assembleMobileArm64_v8aDebug :app:testLeanbackArm64_v8aDebugUnitTest
+bash gradlew --no-configuration-cache --max-workers=2 "-PcompatBuildPython=$build_python" :app:assembleLeanbackArm64_v8aDebug :app:assembleMobileArm64_v8aDebug :app:assembleLeanbackArmeabi_v7aDebug :app:assembleMobileArmeabi_v7aDebug :app:testLeanbackArmeabi_v7aDebugUnitTest :app:testMobileArmeabi_v7aDebugUnitTest

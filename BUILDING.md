@@ -17,7 +17,7 @@
 JAVA_HOME=/path/to/jdk21 ANDROID_HOME=/path/to/android-sdk TV_BUILD_PYTHON=/path/to/python3.10 bash tools/build_release.sh
 ```
 
-脚本会校验或下载发布的播放器依赖包、准备本地开发签名（仅在没有 `local.properties` 时）、构建电视版和手机版 ARM64 Debug APK，并运行工程单元测试。已有本地配置会保留。
+脚本会校验或下载发布的播放器依赖包、准备本地开发签名（仅在没有 `local.properties` 时）、构建电视版和手机版 ARM32 / ARM64 Debug APK，并运行工程单元测试。已有本地配置会保留。
 
 原始 Gradle 命令：
 
@@ -26,7 +26,10 @@ bash gradlew --no-configuration-cache --max-workers=2 \
   -PcompatBuildPython=/path/to/python3.10 \
   :app:assembleLeanbackArm64_v8aDebug \
   :app:assembleMobileArm64_v8aDebug \
-  :app:testLeanbackArm64_v8aDebugUnitTest
+  :app:assembleLeanbackArmeabi_v7aDebug \
+  :app:assembleMobileArmeabi_v7aDebug \
+  :app:testLeanbackArmeabi_v7aDebugUnitTest \
+  :app:testMobileArmeabi_v7aDebugUnitTest
 ```
 
 APK 在 `app/build/outputs/apk/` 下对应的 `debug/` 目录。独立目录与加载队列测试可执行 `python3 tools/test_sources.py`；设置 `JAVA_HOME` 指向含 javac 的 JDK 21。测试脚本下载官方 Maven 依赖并校验发布的校验和。
@@ -36,9 +39,9 @@ APK 在 `app/build/outputs/apk/` 下对应的 `debug/` 目录。独立目录与�
 ## 已完成与未完成的验证
 
 - 18 个媒体 AAR 构建成功。
-- 两份 ARM64 Debug APK 构建成功，APK v2 签名与 SHA-256 校验通过。
-- Android 工程中的 11 项目录/内容单元测试通过；独立加载队列与目录测试共 13 项通过（两者有重叠）。
-- 包名、版本、ARM64 架构、最低 SDK、内置目录、源管理类和原生库依赖闭包检查通过。
+- 四份 ARM32 / ARM64 Debug APK 构建成功，APK v2 签名与 SHA-256 校验通过。
+- Android 工程中，电视版和手机版各 18 项检查通过，其中各 7 项为真实弹窗的 Robolectric 布局回归。独立加载队列与目录测试共 13 项通过，目录用例与 Gradle 检查有重叠。
+- 包名、版本、对应 ARM 架构、最低 SDK、内置目录、源管理类和原生库依赖闭包检查通过。
 - 26 个根目录原生库的 ELF LOAD 段对齐达到 16 KB。
 - 没有连接真机，安装、焦点、切源与实际播放未进行设备验证；16 KB 设备亦未实测。
 

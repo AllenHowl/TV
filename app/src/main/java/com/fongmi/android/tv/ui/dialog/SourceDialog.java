@@ -8,6 +8,8 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,6 +41,9 @@ import com.fongmi.android.tv.source.SourceDirectory;
 import com.fongmi.android.tv.source.SourcePreferences;
 import com.github.catvod.utils.Prefers;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.shape.MaterialShapeDrawable;
+import com.google.android.material.shape.ShapeAppearanceModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,13 +107,12 @@ public class SourceDialog extends DialogFragment {
         type = savedInstanceState == null ? requireArguments().getInt("type") : savedInstanceState.getInt("type");
         allSources = savedInstanceState != null && savedInstanceState.getBoolean("all");
         boolean welcome = requireArguments().getBoolean("welcome");
-        LinearLayout root = column();
-        root.setPadding(dp(20), dp(4), dp(20), dp(8));
-        if (welcome) {
-            TextView intro = new TextView(requireContext());
-            intro.setText(R.string.source_intro);
-            root.addView(intro);
-        }
+        LinearLayout header = column();
+        TextView title = new TextView(requireContext());
+        title.setText(welcome ? R.string.source_welcome : R.string.source_manage);
+        title.setTextSize(20);
+        title.setPadding(0, 0, 0, dp(8));
+        header.addView(title);
         LinearLayout tabs = new LinearLayout(requireContext());
         vod = button(R.string.source_vod);
         live = button(R.string.source_live);
@@ -115,13 +120,13 @@ public class SourceDialog extends DialogFragment {
         tabs.addView(live, new LinearLayout.LayoutParams(0, -2, 1));
         vod.setOnClickListener(view -> changeType(0));
         live.setOnClickListener(view -> changeType(1));
-        root.addView(tabs);
+        header.addView(tabs);
         current = new TextView(requireContext());
         current.setPadding(0, dp(8), 0, dp(8));
         current.setTextSize(tv() ? 18 : 16);
         current.setSingleLine(true);
         current.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        root.addView(current);
+        header.addView(current);
         search = new EditText(requireContext());
         search.setSingleLine(true);
         search.setHint(R.string.source_search);
@@ -133,15 +138,17 @@ public class SourceDialog extends DialogFragment {
         filter.setOnClickListener(view -> { if (!busy) { allSources = !allSources; refresh(); } });
         filter.setTextSize(13);
         searchRow.addView(filter);
-        root.addView(searchRow);
+        header.addView(searchRow);
         status = new TextView(requireContext());
         status.setPadding(0, dp(8), 0, dp(8));
-        root.addView(status);
+        status.setSingleLine(true);
+        status.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        status.setTextSize(13);
+        header.addView(status);
         RecyclerView list = new RecyclerView(requireContext());
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter = new SourceAdapter());
         list.setItemAnimator(null);
-        root.addView(list, new LinearLayout.LayoutParams(-1, 0, 1));
         follow = button(R.string.source_follow);
         follow.setOnClickListener(view -> followVod());
         LinearLayout actions = new LinearLayout(requireContext());
@@ -149,21 +156,24 @@ public class SourceDialog extends DialogFragment {
         Button custom = button(R.string.source_add);
         custom.setOnClickListener(view -> { if (!busy) addCustom(); });
         actions.addView(custom, new LinearLayout.LayoutParams(0, -2, 1));
-        root.addView(actions);
+        Button close = button(welcome ? R.string.source_later : R.string.source_close);
+        close.setOnClickListener(view -> dismiss());
+        actions.addView(close);
+        SourceDialogLayout root = new SourceDialogLayout(requireContext(), header, list, actions, dp(tv() ? 152 : 136));
+        root.setPadding(dp(20), dp(16), dp(20), dp(8));
+        MaterialShapeDrawable background = new MaterialShapeDrawable(ShapeAppearanceModel.builder().setAllCornerSizes(dp(24)).build());
+        background.setTint(MaterialColors.getColor(root, com.google.android.material.R.attr.colorSurface));
+        root.setBackground(background);
         search.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) { refresh(); }
             public void afterTextChanged(Editable s) {}
         });
         refresh();
-        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(welcome ? R.string.source_welcome : R.string.source_manage)
-                .setView(root)
-                .setNegativeButton(welcome ? R.string.source_later : R.string.source_close, null)
-                .create();
+        AppCompatDialog dialog = new AppCompatDialog(requireContext());
+        dialog.setContentView(root);
         dialog.setOnShowListener(ignored -> {
-            dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(view -> { dismiss(); });
-            if (dialog.getWindow() != null) dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+            if (dialog.getWindow() != null) dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
             if (tv()) vod.requestFocus();
         });
         return dialog;
@@ -174,6 +184,7 @@ public class SourceDialog extends DialogFragment {
         super.onStart();
         EventBus.getDefault().register(this);
         if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             int width = Math.min(dp(tv() ? 760 : 560), (int) (getResources().getDisplayMetrics().widthPixels * 0.94));
             int height = Math.min(dp(tv() ? 660 : 760), (int) (getResources().getDisplayMetrics().heightPixels * 0.92));
             getDialog().getWindow().setLayout(width, height);
